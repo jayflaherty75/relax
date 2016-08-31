@@ -1,9 +1,8 @@
 # Relax
-----
 A simple and familiar container definition for React/Redux components.
+----
 
 ## Benefits of Relax:
----
 * No more smart components vs. dumb components.  Relax extends React Component to provide a defined Container.
 * Just write Container methods.  Relax detects and maps action implementations and manages actions, action constants, reducers, etc. for you.
 * If you have two instances of the same component, how does the Redux reducer know which instance it is dealing with?  Actions and reducers are unique to a Relax container instance so you can create multiple instances with each having their own actions and action implementations.
