@@ -1,6 +1,9 @@
 
 import React, { Component } from 'react';
+import _ from 'lodash';
 import map from 'lodash';
+import snakeCase from 'lodash';
+import uniqueId from 'lodash';
 import zipObject from 'lodash';
 
 let _actions_idx = {};
@@ -12,58 +15,56 @@ class Container extends Component {
   constructor (props, content) {
     super (props, content);
 
-    /*const dispatch = props.dispatch;
-    const config = this.config();
-    const store = this.initialStore();
+    this._config = {
+      'name': _.uniqueId(this.constructor.name)
+    };
+  }
 
-    if (typeof dispatch == 'undefined') {
+  /**
+   *
+   * @param config
+   * @param initialState
+   */
+  initialize(config, initialState) {
+    const proto = Object.getPrototypeOf(this);
+    const parent = Container.prototype;
+    //const dispatch = props.dispatch;
+
+    /*if (typeof dispatch == 'undefined') {
       throw new Error ('Relax.Container must be connected to Redux store');
     }
-
-    let methods = _scanMethods(this, Container.prototype, function (method, func) {
+    //*/
+    let methods = this._scanMethods(proto, parent, function (method, func) {
       let args = this._scanArguments(func);
-      let dispatcher = this._createDispatcher(func.bind(this), dispatch, args);
+      //let dispatcher = this._createDispatcher(func.bind(this), dispatch, args);
 
       let result = args[0] == 'state'
         ? {
-          'id': _generateId (config.module_id, method),
+          'id': this._generateId (this._config.name, method),
           'method': method,
           'arguments': args,
           'original': func,
-          'dispatcher': dispatcher
+          //'dispatcher': dispatcher
         }
         : false;
 
       return result;
     }.bind(this));
 
-    for (method in methods) {
+    for (let method in methods) {
       let descriptor = methods[method];
       _actions_idx[descriptor.id] = descriptor;
     }
 
     this._config = config;
-    this._state = state;
     this._methods = methods;
-    //*/
   }
 
   /**
    *
-   * @returns {{module_id: string}}
    */
-  config() {
-    return {
-      module_id: 'sdkfjghkdf'   //TODO: generate unique identifier if not implemented by child
-    }
-  }
+  uninitialize() {
 
-  /**
-   *
-   * @returns {undefined}
-   */
-  initialStore() {
-    return undefined;
   }
 
   /**
@@ -120,38 +121,47 @@ class Container extends Component {
 
   /**
    *
-   * @param obj
-   * @param ignore_map
+   * @param instance
+   * @param parent_proto
    * @param func
    * @returns {[]}
    * @private
    */
-  _scanMethods(obj, ignore_map, func) {
-    if (typeof obj != 'object') {
-      throw new TypeError ('Object is required as first parameter of _scanMethods');
+  _scanMethods(instance, parent_proto, func) {
+    if (typeof instance != 'object') {
+      throw new TypeError (
+        'Object is required as first parameter of _scanMethods'
+      );
     }
 
     if (typeof func != 'function') {
-      throw new TypeError ('Function is required as third parameter of _scanMethods');
+      throw new TypeError (
+        'Function is required as third parameter of _scanMethods'
+      );
     }
 
-    if (typeof ignore_map != 'object') {
-      throw new TypeError('Object is required as second parameter of _scanMethods');
+    if (typeof parent_proto != 'object') {
+      throw new TypeError(
+        'Object is required as second parameter of _scanMethods'
+      );
     }
     else {
-      if (Array.isArray(ignore_map)) {
-        ignore_map = _.zipObject(ignore_map, _.map(ignore_map, () => true));
+      if (Array.isArray(parent_proto)) {
+        parent_proto = _.zipObject(parent_proto, _.map(parent_proto, () => true));
       }
     }
 
-    let result = [];
+    let result = {};
 
-    for (let key in obj) {
-      if (!obj.hasOwnProperty(key)) continue;
-      if (typeof obj[key] != 'function') continue;
-      if (typeof ignore_map[key] != 'undefined') continue;
+    for (let method of Object.getOwnPropertyNames(instance)) {
+      if (typeof instance[method] != 'function') continue;
+      if (typeof parent_proto[method] != 'undefined') continue;
 
-      result.push(key);
+      let descriptor = func(method, instance[method]);
+
+      if (descriptor) {
+        result[method] = func(method, instance[method]);
+      }
     }
 
     return result;
@@ -187,8 +197,11 @@ class Container extends Component {
    * @returns {string}
    * @private
    */
-  _generateId() {
-    return '';
+  _generateId(namespace, method) {
+    return [
+      namespace,
+      _.snakeCase(method).toUpperCase()
+    ].join('/');
   }
 
   /**
