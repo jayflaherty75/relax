@@ -1,22 +1,46 @@
 
 import React, { Component } from 'react';
 import _ from 'lodash';
-import map from 'lodash';
-import snakeCase from 'lodash';
-import uniqueId from 'lodash';
-import zipObject from 'lodash';
+
+const STATE_IDENTIFIER = '__state';
 
 let _actions_idx = {};
 
+/**
+ *
+ * @param arg_list
+ * @returns {{}}
+ * @private
+ */
+const _payloadMapper = function (arg_list) {
+  let result = {};
+
+  for (let i = 0, l = arg_list.length - 1; i < l; i++) {
+    result[arg_list[i]] = arguments[i + 1];
+  }
+
+  return result;
+};
+
+/**
+ *
+ * @param ignore
+ * @param x
+ * @private
+ */
+const _payloadIdentity = (ignore_args, x) => x;
+
+/**
+ *
+ */
 class Container extends Component {
-  /**
-   *
-   */
   constructor (props, content) {
     super (props, content);
 
     this._config = {
-      'name': _.uniqueId(this.constructor.name)
+      'name': _.uniqueId(this.constructor.name),
+      'single_reducer': false,
+      'props': props
     };
   }
 
@@ -28,27 +52,37 @@ class Container extends Component {
   initialize(config, initialState) {
     const proto = Object.getPrototypeOf(this);
     const parent = Container.prototype;
-    //const dispatch = props.dispatch;
+    const dispatch = this._config.props.dispatch;
 
-    /*if (typeof dispatch == 'undefined') {
+    if (typeof dispatch == 'undefined') {
       throw new Error ('Relax.Container must be connected to Redux store');
     }
-    //*/
-    let methods = this._scanMethods(proto, parent, function (method, func) {
-      let args = this._scanArguments(func);
-      //let dispatcher = this._createDispatcher(func.bind(this), dispatch, args);
 
-      let result = args[0] == 'state'
-        ? {
-          'id': this._generateId (this._config.name, method),
+    //TODO: Break out bulding method descriptors so new methods are handled
+    let methods = this._scanMethods(proto, parent, function (method, func) {
+      let type = this._generateId(this._config.name, method);
+      let args = this._scanArguments(func);
+      let reducer = func.bind(this);
+      let action = this._createAction (type, args);
+      let dispatcher = this._createDispatcher(dispatch, action);
+
+      if (args[args.length - 1] == STATE_IDENTIFIER) {
+        (this)[method] = dispatcher;
+
+        return {
+          'type': type,
           'method': method,
           'arguments': args,
-          'original': func,
-          //'dispatcher': dispatcher
-        }
-        : false;
+          'action': action,
+          'dispatcher': dispatcher,
+          'reducer': reducer,
+        };
+      }
+      else {
+        (this)[method] = reducer;
 
-      return result;
+        return false;
+      }
     }.bind(this));
 
     for (let method in methods) {
@@ -106,7 +140,7 @@ class Container extends Component {
    *
    * @returns {Function}
    */
- mapStateToProps() {
+  mapStateToProps() {
     return (x) => x;
   }
 
@@ -185,11 +219,31 @@ class Container extends Component {
 
   /**
    *
+   * @param type
+   * @param arg_list
    * @returns {Function}
    * @private
    */
-  _createDispatcher() {
-    return (x) => x;
+  _createAction(type, arg_list) {
+    let payload = arg_list[0] != 'payload' ? _payloadMapper : _payloadIdentity;
+
+    return (...args) => ({
+      'type': type,
+      'payload': payload(arg_list, ...args)
+    });
+  }
+
+  /**
+   *
+   * @param dispatch
+   * @param action
+   * @returns {Function}
+   * @private
+   */
+  _createDispatcher(dispatch, action) {
+    return (...args) => {
+      dispatch(action(...args));
+    }
   }
 
   /**
