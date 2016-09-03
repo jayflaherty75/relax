@@ -1,23 +1,55 @@
 
 import React, { Component } from 'react';
 import _ from 'lodash';
-import map from 'lodash';
-import snakeCase from 'lodash';
-import uniqueId from 'lodash';
-import zipObject from 'lodash';
+import { addReducer } from './index';
+
+const STATE_IDENTIFIER = '__state';
 
 let _actions_idx = {};
 
+/**
+ *
+ * @param arg_list
+ * @returns {{}}
+ * @private
+ */
+const _payloadMapper = function (arg_list) {
+  let result = {};
+
+  for (let i = 0, l = arg_list.length - 1; i < l; i++) {
+    result[arg_list[i]] = arguments[i + 1];
+  }
+
+  return result;
+};
+
+/**
+ *
+ * @param ignore
+ * @param x
+ * @private
+ */
+const _payloadIdentity = (ignore_args, x) => x;
+
+/**
+ *
+ */
 class Container extends Component {
-  /**
-   *
-   */
   constructor (props, content) {
     super (props, content);
 
+    if (typeof props.dispatch == 'undefined') {
+      throw new Error ('Relax.Container must be connected to Redux store');
+    }
+
+    this._buildMethod = this._buildMethod.bind(this);
+
     this._config = {
-      'name': _.uniqueId(this.constructor.name)
+      'name': _.uniqueId(this.constructor.name),
+      'single_reducer': false,
+      'props': props
     };
+    this._actionsIdx = {};
   }
 
   /**
@@ -28,36 +60,31 @@ class Container extends Component {
   initialize(config, initialState) {
     const proto = Object.getPrototypeOf(this);
     const parent = Container.prototype;
-    //const dispatch = props.dispatch;
 
-    /*if (typeof dispatch == 'undefined') {
-      throw new Error ('Relax.Container must be connected to Redux store');
-    }
-    //*/
-    let methods = this._scanMethods(proto, parent, function (method, func) {
-      let args = this._scanArguments(func);
-      //let dispatcher = this._createDispatcher(func.bind(this), dispatch, args);
-
-      let result = args[0] == 'state'
-        ? {
-          'id': this._generateId (this._config.name, method),
-          'method': method,
-          'arguments': args,
-          'original': func,
-          //'dispatcher': dispatcher
-        }
-        : false;
-
-      return result;
-    }.bind(this));
+    //TODO: Break out building method descriptors so new methods are handled by proxy
+    let methods = this._scanMethods(proto, parent, this._buildMethod);
 
     for (let method in methods) {
       let descriptor = methods[method];
-      _actions_idx[descriptor.id] = descriptor;
+
+      this._actionsIdx[descriptor.type] = descriptor;
+      _actions_idx[descriptor.type] = descriptor;
     }
 
-    this._config = config;
+    this._config = Object.assign (this._config, config);
     this._methods = methods;
+    this._initial_state = initialState;
+
+    this._reducer = function (state = initialState, action) {
+      const descriptor = this._actionsIdx[action.type];
+      if (descriptor && typeof descriptor.reducer == 'function') {
+        return descriptor.reducer (state, action);
+      }
+
+      return state;
+    }.bind(this);
+
+    addReducer(config.name, this._reducer);
   }
 
   /**
@@ -72,7 +99,7 @@ class Container extends Component {
    * @param methodName
    * @returns {string}
    */
-  getActionId (methodName) {
+  getActionType (methodName) {
     return '';
   }
 
@@ -81,7 +108,7 @@ class Container extends Component {
    * @param actionId
    * @param func
    */
-  overridePayload (actionId, func) {
+  overrideAction(actionId, func) {
 
   }
 
@@ -90,7 +117,7 @@ class Container extends Component {
    * @param actionId
    * @param func
    */
-  implement (actionId, func) {
+  implement (actionType, func) {
 
   }
 
@@ -98,7 +125,7 @@ class Container extends Component {
    *
    * @param actionId
    */
-  remove (actionId) {
+  remove (actionType) {
 
   }
 
@@ -106,7 +133,7 @@ class Container extends Component {
    *
    * @returns {Function}
    */
- mapStateToProps() {
+  mapStateToProps() {
     return (x) => x;
   }
 
@@ -154,17 +181,58 @@ class Container extends Component {
     let result = {};
 
     for (let method of Object.getOwnPropertyNames(instance)) {
+      if (method == 'render') continue;
       if (typeof instance[method] != 'function') continue;
       if (typeof parent_proto[method] != 'undefined') continue;
 
       let descriptor = func(method, instance[method]);
 
       if (descriptor) {
-        result[method] = func(method, instance[method]);
+        result[method] = descriptor;
       }
     }
 
     return result;
+  }
+
+  /**
+   *
+   * @param method
+   * @param func
+   * @returns {*}
+   * @private
+   */
+  _buildMethod (method, func) {
+    const dispatch = this._config.props.dispatch;
+
+    let args = this._scanArguments(func);
+    let original = func.bind(this);
+
+    if (args[args.length - 1] == STATE_IDENTIFIER) {
+      let type = this._generateId(this._config.name, method);
+      let is_mapped = args[0] != 'payload';
+      let action = this._createAction (type, args, is_mapped);
+      let reducer = this._createReducer (this, func, args, is_mapped);
+      let dispatcher = this._createDispatcher(dispatch, action);
+
+      (this)[method] = dispatcher;
+
+      return {
+        'component': this,
+        'type': type,
+        'method': method,
+        'arguments': args,
+        'action': action,
+        'dispatcher': dispatcher,
+        'reducer': reducer,
+        'original': original,
+      };
+    }
+    else {
+      (this)[method] = original;
+
+      return false;
+    }
   }
 
   /**
@@ -174,24 +242,78 @@ class Container extends Component {
    * @private
    */
   _scanArguments(func) {
-    var args = func.toString().match(/function\s.*?\(([^)]*)\)/)[1];
+    var args = func.toString()
+      .match(/function\s.*?\(([^)]*)\)/)[1];
 
-    return args.split(',').map(function(arg) {
-      return arg.replace(/\/\*.*\*\//, '').trim();
-    }).filter(function(arg) {
-      return arg;
+    return args.split(',')
+      .map(
+        (arg) => arg.replace(/\/\*.*\*\//, '')
+          .trim()
+      )
+      .filter((arg) => arg);
+  }
+
+  /**
+   *
+   * @param type
+   * @param arg_list
+   * @param is_mapped
+   * @returns {Function}
+   * @private
+   */
+  _createAction(type, arg_list, is_mapped) {
+    let payload = is_mapped ? _payloadMapper : _payloadIdentity;
+
+    return (...args) => ({
+      'type': type,
+      'payload': payload(arg_list, ...args)
     });
   }
 
   /**
    *
+   * @param dispatch
+   * @param action
    * @returns {Function}
    * @private
    */
-  _createDispatcher() {
-    return (x) => x;
+  _createDispatcher(dispatch, action) {
+    return (...args) => {
+      dispatch(action(...args));
+    }
   }
 
+  /**
+   *
+   * @param instance
+   * @param original
+   * @param args
+   * @param is_mapped
+   * @private
+   */
+  _createReducer(instance, original, args, is_mapped) {
+    if (!is_mapped) {
+      return (state, action) => {
+        return original.apply(instance, [ action.payload, state ]);
+      }
+    }
+    else {
+      return (state = this._initial_state, action) => {
+        let payload = action.payload;
+        let apply_args = [];
+
+        args.map ((arg_name) => {
+          if (typeof payload[arg_name] != 'undefined') {
+            apply_args.push (payload[arg_name]);
+          }
+        });
+
+        apply_args.push (state);
+
+        return original.apply(instance, apply_args);
+      }
+    }
+  }
   /**
    *
    * @returns {string}
