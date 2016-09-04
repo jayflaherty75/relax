@@ -1,17 +1,17 @@
 
-import Container from '../Container';
+import Container from './Container';
 
 import {
   payloadMapper,
   reducerMapper,
   payloadIdentity,
   reducerIdentity
-} from './helpers';
+} from './utils/helpers';
 
 /**
  *
  */
-export default class MethodDescriptor {
+export default class ActionDescriptor {
   /**
    *
    * @param component
@@ -115,6 +115,14 @@ export default class MethodDescriptor {
 
   /**
    *
+   * @returns {boolean}
+   */
+  isValid() {
+    return this.type !== false;
+  }
+
+  /**
+   *
    * @param func
    * @returns {Array.<T>}
    * @private
@@ -131,6 +139,13 @@ export default class MethodDescriptor {
       .filter((arg) => arg);
   }
 
+  /**
+   *
+   * @param namespace
+   * @param method
+   * @returns {string}
+   * @private
+   */
   _generateType(namespace, method) {
     return [
       namespace,

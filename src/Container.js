@@ -1,8 +1,8 @@
 
 import React, { Component } from 'react';
 import _ from 'lodash';
-import { addReducer } from './index';
-import MethodDescriptor from './utils/MethodDescriptor';
+import { register, addReducer } from './index';
+import ActionDescriptor from './ActionDescriptor';
 
 /**
  * Global actions registry for referencing actions from other modules
@@ -22,34 +22,48 @@ class Container extends Component {
       throw new Error ('Relax.Container must be connected to Redux store');
     }
 
-    this._config = {
-      'name': _.uniqueId(this.constructor.name),
-      'single_reducer': false,
-      'props': props
-    };
     this._actionsIdx = {};
     this._reducersIdx = {};
+
+    this.getProps = () => props;
   }
 
   /**
    *
-   * @param config
+   * @returns {{name: string, reducer: string, single_state: boolean, single_reducer: boolean}}
+   */
+  config() {
+    const reference = this.prototype ? this.prototype : this;
+    const name = reference.constructor.name;
+
+    return {
+      'name': name,
+      'reducer': name.toLowerCase(),
+      'single_instance': true
+    };
+  }
+
+  /**
+   *
    * @param initialState
    */
-  initialize(config, initialState) {
+  initialize(initialState) {
+    const config = this.config();
     const proto = Object.getPrototypeOf(this);
     const parent = Container.prototype;
-    const dispatch = this._config.props.dispatch;
+    const dispatch = this.getProps().dispatch;
 
     let methods = {};
 
     this._scanMethods(proto, parent).map((method) => {
       let func = (this)[method];
-      let descriptor = new MethodDescriptor(this, dispatch, method, func);
+      let descriptor = new ActionDescriptor(this, dispatch, method, func);
 
-      if (descriptor.type !== false) {
+      if (descriptor.isValid()) {
         methods[method] = descriptor;
         _actions_idx[descriptor.type] = descriptor;
+
+        register(this.getName(), descriptor.type);
 
         this._actionsIdx[descriptor.type] = descriptor;
         this._reducersIdx[descriptor.type] = descriptor.createReducer(this, func);
@@ -61,9 +75,7 @@ class Container extends Component {
       }
     });
 
-    this._config = Object.assign (this._config, config);
     this._methods = methods;
-    this._initial_state = initialState;
 
     addReducer(config.name, ((state = initialState, action) => {
         const reducer = this._reducersIdx[action.type];
@@ -84,11 +96,15 @@ class Container extends Component {
 
   }
 
+  /**
+   *
+   * @returns {string}
+   */
   getName() {
-    return this._config.name;
+    return this.config().name;
   }
 
- /**
+  /**
    *
    * @param actionId
    * @param func
@@ -103,6 +119,17 @@ class Container extends Component {
    */
   remove (actionType) {
 
+  }
+
+  /**
+   *
+   * @param name
+   * @returns {boolean}
+   */
+  static getAction(name) {
+    return typeof _actions_idx[name] != 'undefined'
+      ? _actions_idx[name]
+      : false;
   }
 
   /**
