@@ -24,8 +24,6 @@ class Container extends Component {
 
     this._actionsIdx = {};
     this._reducersIdx = {};
-
-    this.getProps = () => props;
   }
 
   /**
@@ -51,13 +49,12 @@ class Container extends Component {
     const config = this.config();
     const proto = Object.getPrototypeOf(this);
     const parent = Container.prototype;
-    const dispatch = this.getProps().dispatch;
 
     let methods = {};
 
     this._scanMethods(proto, parent).map((method) => {
       let func = (this)[method];
-      let descriptor = new ActionDescriptor(this, dispatch, method, func);
+      let descriptor = new ActionDescriptor(this, method, func);
 
       if (descriptor.isValid()) {
         methods[method] = descriptor;
@@ -77,7 +74,7 @@ class Container extends Component {
 
     this._methods = methods;
 
-    addReducer(config.name, ((state = initialState, action) => {
+    addReducer(config.reducer, ((state = initialState, action) => {
         const reducer = this._reducersIdx[action.type];
 
         if (typeof reducer == 'function') {

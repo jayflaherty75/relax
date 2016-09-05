@@ -48,7 +48,11 @@ const register = (name, action) => {
  *
  * @param name
  */
-const getActions = (container) => Object.keys(_registry[container]).map ((act) => act);
+const getActions = (name) => {
+  return typeof _registry[name] != 'undefined'
+    ? Object.keys(_registry[name]).map ((act) => act)
+    : false;
+};
 
 /**
  *

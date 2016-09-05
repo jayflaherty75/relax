@@ -1,6 +1,6 @@
 
 import Container from './Container';
-import { getActions, _store } from './index';
+import { getActions } from './index';
 import { connect as connectRedux } from 'react-redux';
 import _ from 'lodash';
 
@@ -16,24 +16,13 @@ export default (mapStateToProps, mapDispatchToProps, mergeProps, options) => {
   return (cont) => {
     _buildConfig(cont);
 
-    _initialize(cont);
-
     const newMapStateToProps = (state) => {
-      let custom_map = {};
-
-      /*
       const config = cont.prototype.config();
 
-      let actions = getActions(config.name);
+      // Mapping is here in case anything has to be auto-mapped to props.
+      // Currently not in use.
       let mapping = {};
-
-      for (let i = 0, l = actions.length; i < l; i++) {
-        let action = actions[i];
-        let desc = Container.getAction(action);
-
-        mapping[desc.method] = desc.dispatcher;
-      }
-      */
+      let custom_map = {};
 
       switch (typeof mapStateToProps) {
         case 'function':
@@ -45,7 +34,7 @@ export default (mapStateToProps, mapDispatchToProps, mergeProps, options) => {
 
       return Object.assign (
         custom_map,
-        //mapping
+        mapping
       );
     };
 
@@ -92,8 +81,4 @@ const _buildConfig = function (cont) {
   }
 
   cont.prototype.config = () => base;
-};
-
-const _initialize = function (cont) {
-
 };

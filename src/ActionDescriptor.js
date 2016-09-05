@@ -1,5 +1,6 @@
 
 import Container from './Container';
+import { _store } from './index';
 
 import {
   payloadMapper,
@@ -11,26 +12,21 @@ import {
 /**
  *
  */
-export default class ActionDescriptor {
+export default class {
   /**
    *
    * @param component
-   * @param dispatch
    * @param method
    * @param func
    */
-  constructor(component, dispatch, method, func) {
+  constructor(component, method, func) {
     if (!(component instanceof Container)) {
       throw new Error (
         'Relax.MethodDescriptor: component must be a Relax.Container'
       )
     }
 
-    if (typeof dispatch != 'function') {
-      throw new Error (
-        'Relax.MethodDescriptor: dispatch must be a function'
-      )
-    }
+    const dispatch = _store.dispatch.bind(_store);
 
     this.component = component;
     this.method = method;
