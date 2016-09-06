@@ -14,11 +14,9 @@ import _ from 'lodash';
  */
 export default (mapStateToProps, mapDispatchToProps, mergeProps, options) => {
   return (cont) => {
-    _buildConfig(cont);
+    const config = _buildConfig(cont);
 
     const newMapStateToProps = (state) => {
-      const config = cont.prototype.config();
-
       // Mapping is here in case anything has to be auto-mapped to props.
       // Currently not in use.
       let mapping = {};
@@ -81,4 +79,6 @@ const _buildConfig = function (cont) {
   }
 
   cont.prototype.config = () => base;
+
+  return base;
 };

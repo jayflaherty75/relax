@@ -1,3 +1,6 @@
+
+import _ from 'lodash';
+
 /**
  *
  * @param arg_list
@@ -45,4 +48,42 @@ export const payloadIdentity = (ignore_args, x) => x;
  * @param arg_list
  */
 export const reducerIdentity = (action, arg_list) => [ action.payload ];
+
+/**
+ *
+ * @param instance
+ * @param parent_proto
+ * @returns {[]}
+ * @private
+ */
+export const scanMethods = (instance, parent_proto) => {
+  if (typeof instance != 'object') {
+    throw new TypeError (
+      'Object is required as first parameter of scanMethods'
+    );
+  }
+
+  if (typeof parent_proto != 'object') {
+    throw new TypeError(
+      'Object is required as second parameter of scanMethods'
+    );
+  }
+  else {
+    if (Array.isArray(parent_proto)) {
+      parent_proto = _.zipObject(parent_proto, _.map(parent_proto, () => true));
+    }
+  }
+
+  let result = [];
+
+  for (let method of Object.getOwnPropertyNames(instance)) {
+    if (method == 'render') continue;
+    if (typeof instance[method] != 'function') continue;
+    if (typeof parent_proto[method] != 'undefined') continue;
+
+    result.push(method);
+  }
+
+  return result;
+}
 

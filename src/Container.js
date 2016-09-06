@@ -1,8 +1,10 @@
 
-import React, { Component } from 'react';
 import _ from 'lodash';
-import { register, addReducer } from './index';
+
+import React, { Component } from 'react';
 import ActionDescriptor from './ActionDescriptor';
+import { register, addReducer } from './index';
+import { scanMethods } from './utils/helpers';
 
 /**
  * Global actions registry for referencing actions from other modules
@@ -52,7 +54,7 @@ class Container extends Component {
 
     let methods = {};
 
-    this._scanMethods(proto, parent).map((method) => {
+    scanMethods(proto, parent).map((method) => {
       let func = (this)[method];
       let descriptor = new ActionDescriptor(this, method, func);
 
@@ -127,45 +129,6 @@ class Container extends Component {
     return typeof _actions_idx[name] != 'undefined'
       ? _actions_idx[name]
       : false;
-  }
-
-  /**
-   *
-   * @param instance
-   * @param parent_proto
-   * @param func
-   * @returns {[]}
-   * @private
-   */
-  _scanMethods(instance, parent_proto) {
-    if (typeof instance != 'object') {
-      throw new TypeError (
-        'Object is required as first parameter of _scanMethods'
-      );
-    }
-
-    if (typeof parent_proto != 'object') {
-      throw new TypeError(
-        'Object is required as second parameter of _scanMethods'
-      );
-    }
-    else {
-      if (Array.isArray(parent_proto)) {
-        parent_proto = _.zipObject(parent_proto, _.map(parent_proto, () => true));
-      }
-    }
-
-    let result = [];
-
-    for (let method of Object.getOwnPropertyNames(instance)) {
-      if (method == 'render') continue;
-      if (typeof instance[method] != 'function') continue;
-      if (typeof parent_proto[method] != 'undefined') continue;
-
-      result.push(method);
-    }
-
-    return result;
   }
 }
 
