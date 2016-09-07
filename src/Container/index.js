@@ -2,9 +2,10 @@
 import _ from 'lodash';
 
 import React, { Component } from 'react';
-import ActionDescriptor from './ActionDescriptor';
-import { register, addReducer } from './index';
-import { scanMethods } from './utils/helpers';
+import Action from '../Action/index';
+import Reducer from '../Reducer/index';
+import { register, addReducer } from '../index';
+import { scanMethods } from '../utils/helpers';
 
 /**
  * Global actions registry for referencing actions from other modules
@@ -16,7 +17,7 @@ let _actions_idx = {};
 /**
  *
  */
-class Container extends Component {
+export default class Container extends Component {
   constructor (props, content) {
     super (props, content);
 
@@ -25,7 +26,7 @@ class Container extends Component {
     }
 
     this._actionsIdx = {};
-    this._reducersIdx = {};
+    this.reducer = new Reducer(this);
   }
 
   /**
@@ -56,16 +57,14 @@ class Container extends Component {
 
     scanMethods(proto, parent).map((method) => {
       let func = (this)[method];
-      let descriptor = new ActionDescriptor(this, method, func);
+      let descriptor = new Action(this, method);
 
       if (descriptor.isValid()) {
         methods[method] = descriptor;
         _actions_idx[descriptor.type] = descriptor;
 
-        register(this.getName(), descriptor.type);
-
         this._actionsIdx[descriptor.type] = descriptor;
-        this._reducersIdx[descriptor.type] = descriptor.createReducer(this, func);
+        this.reducer.add(descriptor, func);
 
         (this)[method] = descriptor.dispatcher;
       }
@@ -76,16 +75,7 @@ class Container extends Component {
 
     this._methods = methods;
 
-    addReducer(config.reducer, ((state = initialState, action) => {
-        const reducer = this._reducersIdx[action.type];
-
-        if (typeof reducer == 'function') {
-          return reducer (state, action);
-        }
-
-        return state;
-      }
-    ).bind(this));
+    addReducer(config.reducer, this.reducer.create(initialState));
   }
 
   /**
@@ -131,5 +121,3 @@ class Container extends Component {
       : false;
   }
 }
-
-export default Container;

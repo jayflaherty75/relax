@@ -1,13 +1,12 @@
 
-import Container from './Container';
-import { _store } from './index';
+import { _store } from '../index';
 
 import {
   payloadMapper,
   reducerMapper,
   payloadIdentity,
   reducerIdentity
-} from './utils/helpers';
+} from '../utils/helpers';
 
 /**
  *
@@ -19,29 +18,29 @@ export default class {
    * @param method
    * @param func
    */
-  constructor(component, method, func) {
-    if (!(component instanceof Container)) {
+  constructor(obj, method) {
+    if (typeof obj != 'object') {
       throw new Error (
-        'Relax.MethodDescriptor: component must be a Relax.Container'
+        'Parameter obj must be an object'
       )
     }
 
-    const dispatch = _store.dispatch.bind(_store);
+    if (typeof method != 'string') {
+      throw new Error (
+        'Parameter method must be an object'
+      )
+    }
 
-    this.component = component;
+    this.object = obj;
     this.method = method;
     this.original = false;
     this.type = false;
     this.arguments = false;
     this.action = false;
-    this.reducer = false;
+    this.reducer_map = false;
 
-    this.dispatcher = ((...args) => {
-      dispatch(this.action(...args));
-    }).bind(this);
-
-    if (typeof func == 'function') {
-      this.build(func);
+    if (typeof obj[method] == 'function') {
+      this.build(obj, method);
     }
   }
 
@@ -49,20 +48,26 @@ export default class {
    *
    * @param func
    */
-  build(func) {
-    let args = this._scanArguments(func);
+  build(obj, method) {
+    let func = obj[method];
+    let args = this.scanArguments(func);
 
     if (args[args.length - 1] == '__state') {
+      const dispatch = _store.dispatch.bind(_store);
+
       let is_mapped = args[0] != 'payload';
 
-      let type = this._generateType(this.component.getName(), this.method);
-
-      this.original = func.bind(this.component);
+      let type = this.generateType(this.object.getName(), this.method);
+      this.original = func.bind(this.object);
       this.type = type;
       this.arguments = args;
 
       this.setActionCreator(is_mapped ? payloadMapper : payloadIdentity)
       this.setReducerMapping(is_mapped ? reducerMapper : reducerIdentity);
+
+      this.dispatcher = ((...args) => {
+        dispatch(this.action(...args));
+      }).bind(this);
     }
   }
 
@@ -88,25 +93,7 @@ export default class {
    * @param reducer
    */
   setReducerMapping(reducer) {
-    this.reducer = reducer;
-  }
-
-  /**
-   *
-   * @param component
-   * @param handler
-   * @returns {Function}
-   */
-  createReducer(component, handler) {
-    const arg_list = this.arguments;
-
-    return (state, action) => {
-      let apply_args = this.reducer(action, arg_list);
-
-      apply_args.push (state);
-
-      return handler.apply(component, apply_args);
-    }
+    this.reducer_map = reducer;
   }
 
   /**
@@ -123,7 +110,7 @@ export default class {
    * @returns {Array.<T>}
    * @private
    */
-  _scanArguments(func) {
+  scanArguments(func) {
     var args = func.toString()
       .match(/function\s.*?\(([^)]*)\)/)[1];
 
@@ -142,7 +129,7 @@ export default class {
    * @returns {string}
    * @private
    */
-  _generateType(namespace, method) {
+  generateType(namespace, method) {
     return [
       namespace,
       _.snakeCase(method).toUpperCase()

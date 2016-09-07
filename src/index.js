@@ -1,12 +1,11 @@
 
-import Container from './Container';
-import ActionDescriptor from './ActionDescriptor';
+import Container from './Container/index';
+import Action from './Action/index';
 import connect from './connect';
 import { combineReducers } from 'redux';
 
 let _store = false;
 let _reducers = {};
-let _registry = {};
 let _combine = combineReducers;
 
 /**
@@ -23,46 +22,12 @@ const Relax = (store, reducers) => {
 /**
  *
  * @param name
- * @param action
- */
-const register = (name, action) => {
-  if (typeof name != 'string') {
-    throw new Error (
-      'Relax.register: name must be a string'
-    );
-  }
-
-  if (typeof action != 'string') {
-    throw new Error (
-      'Relax.register: action must be a string'
-    );
-  }
-
-  if (!_registry[name]) {
-    _registry[name] = {};
-  }
-  _registry[name][action] = true;
-};
-
-/**
- *
- * @param name
- */
-const getActions = (name) => {
-  return typeof _registry[name] != 'undefined'
-    ? Object.keys(_registry[name]).map ((act) => act)
-    : false;
-};
-
-/**
- *
- * @param name
  * @param reducer
  */
 const addReducer = (name, reducer) => {
   if (!_store) {
     throw new Error (
-      'Relax: You must initialize by calling Relax(store)'
+      'Relax: You must initialize by calling Relax(store [, reducers])'
     );
   }
 
@@ -112,13 +77,12 @@ const overrideCombineReducers = (func) => {
 };
 
 export {
+  Action,
   Container,
-  connect,
-  register,
-  getActions,
   addReducer,
-  removeReducer,
+  connect,
   overrideCombineReducers,
+  removeReducer,
   _store
 };
 

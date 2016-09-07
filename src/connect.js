@@ -1,7 +1,8 @@
 
-import Container from './Container';
+import Container from './Container/index';
 import { getActions } from './index';
 import { connect as connectRedux } from 'react-redux';
+import { scanMethods } from './utils/helpers';
 import _ from 'lodash';
 
 /**
@@ -14,7 +15,7 @@ import _ from 'lodash';
  */
 export default (mapStateToProps, mapDispatchToProps, mergeProps, options) => {
   return (cont) => {
-    const config = _buildConfig(cont);
+    const config = buildConfig(cont);
 
     const newMapStateToProps = (state) => {
       // Mapping is here in case anything has to be auto-mapped to props.
@@ -50,7 +51,7 @@ export default (mapStateToProps, mapDispatchToProps, mergeProps, options) => {
  * @param cont
  * @private
  */
-const _buildConfig = function (cont) {
+function buildConfig(cont) {
   let config = cont.prototype.config ? cont.prototype.config : false;
   let base = Container.prototype.config.bind(cont)();
   let override = config ? config.bind(cont)() : {};
