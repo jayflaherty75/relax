@@ -19,13 +19,14 @@ import _ from 'lodash';
 export default function connect(mapStateToProps, mapDispatchToProps, mergeProps, options) {
   return (cont) => {
     const config = buildConfig(cont);
-    const actions = initialize(config, cont);
+
+    initialize(config, cont);
 
     const newMapStateToProps = (state) => {
       // Mapping is here in case anything has to be auto-mapped to props.
       // Currently not in use.
-      let mapping = {};
-      let custom_map = {};
+      let mapping = {},
+        custom_map = {};
 
       switch (typeof mapStateToProps) {
         case 'function':
@@ -56,9 +57,9 @@ export default function connect(mapStateToProps, mapDispatchToProps, mergeProps,
  * @private
  */
 function buildConfig(cont) {
-  let config = cont.prototype.config ? cont.prototype.config : false;
-  let base = Container.prototype.config.bind(cont)();
-  let override = config ? config.bind(cont)() : {};
+  let config = cont.prototype.config ? cont.prototype.config : false,
+    base = Container.prototype.config.bind(cont)(),
+    override = config ? config.bind(cont)() : {};
 
   if (typeof override.single_instance == 'boolean') {
     base.single_instance = override.single_instance;
@@ -69,20 +70,12 @@ function buildConfig(cont) {
   }
 
   if (typeof override.name == 'string') {
-    if (base.single_instance) {
-      base.name = override.name;
-    }
-    else {
-      base.name = override.name;
-    }
+    base.name = override.name;
   }
 
-  if (typeof override.reducer == 'string') {
-    base.reducer = override.reducer;
-  }
-  else {
-    base.reducer = base.name.toLowerCase();
-  }
+  base.reducer = typeof override.reducer == 'string'
+    ? override.reducer
+    : base.name.toLowerCase();
 
   cont.prototype.config = () => base;
 
@@ -98,8 +91,9 @@ function buildConfig(cont) {
  * @private
  */
 function initialize(config, cont) {
-  const proto = cont.prototype;
-  const parent = Container.prototype;
+  const proto = cont.prototype,
+    parent = Container.prototype,
+    reducer = new Reducer();
 
   let actions = {};
 
@@ -107,35 +101,33 @@ function initialize(config, cont) {
     let action = new Action(proto, method);
 
     if (action.isValid()) {
-      const reducer = new Reducer();
-
       registry(action.type, action);
       actions[action.type] = action;
-
-      proto.getActions = function getActions(type) {
-        return Object.keys(actions);
-      };
-
-      proto.initialize = function initialize() {
-        this.getActions().map((type) => {
-          let action = registry(type);
-          let func = proto[action.method];
-
-          if (typeof action == 'object') {
-            reducer.addAction(this, action, func);
-
-            (this)[action.method] = action.dispatcher;
-          }
-        });
-      };
-
-      proto.uninitialize = function uninitialize() {
-        reducer.removeInstance(this);
-      };
-
-      addReducer(config.reducer, reducer.create(config.initial_state));
     }
   });
+
+  proto.getActions = function getActions(type) {
+    return Object.keys(actions);
+  };
+
+  proto.initialize = function initialize() {
+    this.getActions().map((type) => {
+      let action = registry(type);
+      let func = proto[action.method];
+
+      if (typeof action == 'object') {
+        reducer.addAction(this, action, func);
+
+        (this)[action.method] = action.dispatcher;
+      }
+    });
+  };
+
+  proto.uninitialize = function uninitialize() {
+    reducer.removeInstance(this);
+  };
+
+  addReducer(config.reducer, reducer.create(config.initial_state));
 
   return actions;
 }

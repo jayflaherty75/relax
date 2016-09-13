@@ -4,8 +4,24 @@ import Action from './Action/index';
 import connect from './connect';
 import { combineReducers } from 'redux';
 
+/**
+ * Reference to application store.
+ * @type {boolean}
+ * @private
+ */
 let _store = false;
+
+/**
+ * Current state of reducers used to dynamically modify root reducer.
+ * @type {{}}
+ * @private
+ */
 let _reducers = {};
+
+/**
+ * Reducer combiner function.  Default is redux combinerReducer but can be
+ * changed for use with other libraries such as redux-immutable.
+ */
 let _combine = combineReducers;
 
 /**
@@ -22,7 +38,7 @@ let _actions_idx = {};
  * @param combineReducers
  * @constructor
  */
-const Relax = (store, reducers, combineReducers) => {
+function Relax(store, reducers, combineReducers) {
   if (typeof store != 'object') {
     throw new Error (
       'Relax parameter #1 must be a valid Redux store'
@@ -39,7 +55,7 @@ const Relax = (store, reducers, combineReducers) => {
  * @param name
  * @param reducer
  */
-const addReducer = (name, reducer) => {
+function addReducer(name, reducer) {
   if (!_store) {
     throw new Error (
       'Relax: You must initialize by calling Relax(store [, reducers])'
@@ -60,7 +76,7 @@ const addReducer = (name, reducer) => {
  * Generic function for dynamically removing a reducer to Redux.
  * @param name
  */
-const removeReducer = (name) => {
+function removeReducer(name) {
   if (!_store) {
     throw new Error (
       'Relax: You must initialize by calling Relax(store)'

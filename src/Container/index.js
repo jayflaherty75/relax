@@ -31,8 +31,8 @@ export default class Container extends Component {
    * @returns {{name: *, reducer: string, initial_state: {}, single_instance: boolean}}
    */
   config() {
-    const reference = this.prototype ? this.prototype : this;
-    const name = reference.constructor.name;
+    const reference = this.prototype ? this.prototype : this,
+      name = reference.constructor.name;
 
     return {
       'name': name,

@@ -77,19 +77,19 @@ export default class Reducer {
    * Wraps original reducer method from Container with reducer mapper to
    * map action payload to reducer arguments and adds store as last argument.
    * @param instance
-   * @param action_obj
+   * @param actionObj
    * @param handler
    * @returns {Function}
    */
-  createMapper(instance, action_obj, handler) {
-    const arg_list = action_obj.arguments;
+  createMapper(instance, actionObj, handler) {
+    const argList = actionObj.arguments;
 
     return (state, action) => {
-      let apply_args = action_obj.reducer_map(action, arg_list);
+      let applyArgs = actionObj.reducerMap(action, argList);
 
-      apply_args.push (state);
+      applyArgs.push (state);
 
-      return handler.apply(instance, apply_args);
+      return handler.apply(instance, applyArgs);
     }
   }
 }

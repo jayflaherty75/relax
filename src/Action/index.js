@@ -37,7 +37,7 @@ export default class Action {
     this.type = false;
     this.arguments = false;
     this.action = false;
-    this.reducer_map = false;
+    this.reducerMap = false;
 
     if (typeof obj[method] == 'function') {
       this.build(obj, method);
@@ -46,18 +46,18 @@ export default class Action {
 
   /**
    * Main action builder method.
-   * @param func
+   * @param obj
+   * @param method
    */
   build(obj, method) {
-    let func = obj[method];
-    let args = this.scanArguments(func);
+    let func = obj[method],
+      args = this.scanArguments(func);
 
     if (args[args.length - 1] == '__state') {
       const dispatch = _store.dispatch.bind(_store);
 
-      let is_mapped = args[0] != 'payload';
-
-      let type = this.generateType(this.object.getName(), this.method);
+      let is_mapped = args[0] != 'payload',
+        type = this.generateType(this.object.getName(), this.method);
 
       this.original = func.bind(this.object);
       this.type = type;
@@ -80,8 +80,8 @@ export default class Action {
    * @returns {function}
    */
   setActionCreator(payload) {
-    const type = this.type;
-    const arg_list = this.arguments;
+    const type = this.type,
+      arg_list = this.arguments;
 
     this.action = (...args) => ({
       'type': type,
@@ -97,7 +97,7 @@ export default class Action {
    * @param reducer
    */
   setReducerMapping(reducer) {
-    this.reducer_map = reducer;
+    this.reducerMap = reducer;
   }
 
   /**
@@ -115,7 +115,7 @@ export default class Action {
    * @private
    */
   scanArguments(func) {
-    var args = func.toString()
+    let args = func.toString()
       .match(/function\s.*?\(([^)]*)\)/)[1];
 
     return args.split(',')
