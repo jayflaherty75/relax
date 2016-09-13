@@ -6,7 +6,7 @@ import _ from 'lodash';
  * @param arg_list
  * @returns {{}}
  */
-export const payloadMapper = function (arg_list) {
+export function payloadMapper(arg_list) {
   let result = {};
 
   for (let i = 0, l = arg_list.length - 1; i < l; i++) {
@@ -22,7 +22,7 @@ export const payloadMapper = function (arg_list) {
  * @param arg_list
  * @returns {Array}
  */
-export const reducerMapper = (action, arg_list) => {
+export function reducerMapper(action, arg_list) {
   let payload = action.payload;
   let apply_args = [];
 
@@ -56,7 +56,7 @@ export const reducerIdentity = (action, arg_list) => [ action.payload ];
  * @returns {[]}
  * @private
  */
-export const scanMethods = (instance, parent_proto) => {
+export function scanMethods(instance, parent_proto) {
   if (typeof instance != 'object') {
     throw new TypeError (
       'Object is required as first parameter of scanMethods'
@@ -86,4 +86,3 @@ export const scanMethods = (instance, parent_proto) => {
 
   return result;
 }
-

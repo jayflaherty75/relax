@@ -1,68 +1,48 @@
 
-import Container from './Container';
-import ActionDescriptor from './ActionDescriptor';
+import Container from './Container/index';
+import Action from './Action/index';
 import connect from './connect';
 import { combineReducers } from 'redux';
 
 let _store = false;
 let _reducers = {};
-let _registry = {};
 let _combine = combineReducers;
 
 /**
- *
+ * Global actions registry for referencing actions from other modules
+ * @type {{}}
+ * @private
+ */
+let _actions_idx = {};
+
+/**
+ * Relax initialization to be called from application store.
  * @param store
  * @param reducers
+ * @param combineReducers
  * @constructor
  */
-const Relax = (store, reducers) => {
+const Relax = (store, reducers, combineReducers) => {
+  if (typeof store != 'object') {
+    throw new Error (
+      'Relax parameter #1 must be a valid Redux store'
+    );
+  }
+
   _store = store;
-  _reducers = reducers;
+  _reducers = reducers || {};
+  _combine = combineReducers;
 };
 
 /**
- *
- * @param name
- * @param action
- */
-const register = (name, action) => {
-  if (typeof name != 'string') {
-    throw new Error (
-      'Relax.register: name must be a string'
-    );
-  }
-
-  if (typeof action != 'string') {
-    throw new Error (
-      'Relax.register: action must be a string'
-    );
-  }
-
-  if (!_registry[name]) {
-    _registry[name] = {};
-  }
-  _registry[name][action] = true;
-};
-
-/**
- *
- * @param name
- */
-const getActions = (name) => {
-  return typeof _registry[name] != 'undefined'
-    ? Object.keys(_registry[name]).map ((act) => act)
-    : false;
-};
-
-/**
- *
+ * Generic function for dynamically adding a reducer to Redux.
  * @param name
  * @param reducer
  */
 const addReducer = (name, reducer) => {
   if (!_store) {
     throw new Error (
-      'Relax: You must initialize by calling Relax(store)'
+      'Relax: You must initialize by calling Relax(store [, reducers])'
     );
   }
 
@@ -77,7 +57,7 @@ const addReducer = (name, reducer) => {
 };
 
 /**
- *
+ * Generic function for dynamically removing a reducer to Redux.
  * @param name
  */
 const removeReducer = (name) => {
@@ -98,27 +78,33 @@ const removeReducer = (name) => {
 };
 
 /**
- *
- * @param func
+ * Action registry.  Passing type returns the associated action.  If an action
+ * is provided, associates the action to the given type (overwrites).  If
+ * action is false, action of the given type is deleted.
+ * @param type
+ * @param action
+ * @returns {*}
  */
-const overrideCombineReducers = (func) => {
-  if (typeof func != 'function') {
-    throw new Error (
-      'Relax: Reducer combiner must be a function'
-    );
+function registry(type, action) {
+  if (typeof action == 'object') {
+    _actions_idx[type] = action;
+  }
+  else if (action === false) {
+    delete _actions_idx[type];
+
+    return false;
   }
 
-  _combine = func;
-};
+  return _actions_idx[type]
+}
 
 export {
+  Action,
   Container,
-  connect,
-  register,
-  getActions,
   addReducer,
+  connect,
+  registry,
   removeReducer,
-  overrideCombineReducers,
   _store
 };
 
