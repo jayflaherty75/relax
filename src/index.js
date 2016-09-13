@@ -16,18 +16,26 @@ let _combine = combineReducers;
 let _actions_idx = {};
 
 /**
- *
+ * Relax initialization to be called from application store.
  * @param store
  * @param reducers
+ * @param combineReducers
  * @constructor
  */
-const Relax = (store, reducers) => {
+const Relax = (store, reducers, combineReducers) => {
+  if (typeof store != 'object') {
+    throw new Error (
+      'Relax parameter #1 must be a valid Redux store'
+    );
+  }
+
   _store = store;
-  _reducers = reducers;
+  _reducers = reducers || {};
+  _combine = combineReducers;
 };
 
 /**
- *
+ * Generic function for dynamically adding a reducer to Redux.
  * @param name
  * @param reducer
  */
@@ -49,7 +57,7 @@ const addReducer = (name, reducer) => {
 };
 
 /**
- *
+ * Generic function for dynamically removing a reducer to Redux.
  * @param name
  */
 const removeReducer = (name) => {
@@ -70,19 +78,13 @@ const removeReducer = (name) => {
 };
 
 /**
- *
- * @param func
+ * Action registry.  Passing type returns the associated action.  If an action
+ * is provided, associates the action to the given type (overwrites).  If
+ * action is false, action of the given type is deleted.
+ * @param type
+ * @param action
+ * @returns {*}
  */
-const overrideCombineReducers = (func) => {
-  if (typeof func != 'function') {
-    throw new Error (
-      'Relax: Reducer combiner must be a function'
-    );
-  }
-
-  _combine = func;
-};
-
 function registry(type, action) {
   if (typeof action == 'object') {
     _actions_idx[type] = action;
@@ -101,7 +103,6 @@ export {
   Container,
   addReducer,
   connect,
-  overrideCombineReducers,
   registry,
   removeReducer,
   _store

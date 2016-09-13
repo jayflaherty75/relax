@@ -9,7 +9,7 @@ import {
 } from '../utils/helpers';
 
 /**
- *
+ * Builds a representation of a Redux action from an object method.
  */
 export default class Action {
   /**
@@ -45,7 +45,7 @@ export default class Action {
   }
 
   /**
-   *
+   * Main action builder method.
    * @param func
    */
   build(obj, method) {
@@ -73,9 +73,11 @@ export default class Action {
   }
 
   /**
-   *
+   * Sets the payload "shaper" function to be used to build the action object.
+   * Function is given an array of argument names along with the each
+   * individual argument value and returns a payload object.
    * @param payload
-   * @returns {MethodDescriptor.action|*}
+   * @returns {function}
    */
   setActionCreator(payload) {
     const type = this.type;
@@ -90,7 +92,8 @@ export default class Action {
   }
 
   /**
-   *
+   * Sets the reducer mapper function (opposite process of payload shaper)
+   * which takes a payload object and returns an array of argument values.
    * @param reducer
    */
   setReducerMapping(reducer) {
@@ -98,7 +101,7 @@ export default class Action {
   }
 
   /**
-   *
+   * Returns true if action is valid.
    * @returns {boolean}
    */
   isValid() {
@@ -106,7 +109,7 @@ export default class Action {
   }
 
   /**
-   *
+   * Given a functions, returns an array of arguments from the function.
    * @param func
    * @returns {Array.<T>}
    * @private
@@ -124,7 +127,10 @@ export default class Action {
   }
 
   /**
-   *
+   * Generates an action type from a namespace (usually the container name) and
+   * a method name separated by forward slash.  Method name is converted to
+   * uppercase snake case.  Ex:
+   *  FooContainer.allTheThings becomes 'FooContainer/ALL_THE_THINGS'
    * @param namespace
    * @param method
    * @returns {string}

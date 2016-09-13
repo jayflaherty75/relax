@@ -2,7 +2,10 @@
 import { _store } from '../index';
 
 /**
- *
+ * Representation of a Redux reducer handling multiple actions for a given
+ * container.  Individual instances of a container may have a reducer with
+ * each action handler bound to it.  Must be passed to addReducers to
+ * install.
  */
 export default class Reducer {
   /**
@@ -13,7 +16,9 @@ export default class Reducer {
   }
 
   /**
-   *
+   * For the given container instance and action, adds a handler.  These are
+   * associated with the reducer even if it is already installed so the handler
+   * immediately processes actions.
    * @param instance
    * @param action
    * @param handler
@@ -27,7 +32,7 @@ export default class Reducer {
   }
 
   /**
-   *
+   * Removes all action handlers for the given instance.
    * @param instance
    */
   removeInstance(instance) {
@@ -43,7 +48,8 @@ export default class Reducer {
   }
 
   /**
-   *
+   * Creates a reducer function usable by Redux.  The addReducer() function
+   * may be used to install and uninstall reducers more easily.
    * @param initialState
    * @returns {function(this:(*|string))}
    */
@@ -68,7 +74,8 @@ export default class Reducer {
   }
 
   /**
-   *
+   * Wraps original reducer method from Container with reducer mapper to
+   * map action payload to reducer arguments and adds store as last argument.
    * @param instance
    * @param action_obj
    * @param handler

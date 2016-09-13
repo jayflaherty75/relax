@@ -8,14 +8,15 @@ import { scanMethods } from './utils/helpers';
 import _ from 'lodash';
 
 /**
- *
+ * Wrapper for react-redux connect() function.  Handles all initialization and
+ * "wiring" of Redux actions and reducers for the given Relax Container.
  * @param mapStateToProps
  * @param mapDispatchToProps
  * @param mergeProps
  * @param options
  * @returns {Function}
  */
-export default (mapStateToProps, mapDispatchToProps, mergeProps, options) => {
+export default function connect(mapStateToProps, mapDispatchToProps, mergeProps, options) {
   return (cont) => {
     const config = buildConfig(cont);
     const actions = initialize(config, cont);
@@ -50,7 +51,7 @@ export default (mapStateToProps, mapDispatchToProps, mergeProps, options) => {
 };
 
 /**
- *
+ * Manageg configuration of child Container classes.
  * @param cont
  * @private
  */
@@ -89,9 +90,12 @@ function buildConfig(cont) {
 };
 
 /**
- *
+ * Initializes Container class, adding methods for to initialize and
+ * uninitialize reducer which may be added or removed at any time during
+ * component lifecycle, including construction.
  * @param config
  * @param cont
+ * @private
  */
 function initialize(config, cont) {
   const proto = cont.prototype;
