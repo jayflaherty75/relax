@@ -9,6 +9,13 @@ let _reducers = {};
 let _combine = combineReducers;
 
 /**
+ * Global actions registry for referencing actions from other modules
+ * @type {{}}
+ * @private
+ */
+let _actions_idx = {};
+
+/**
  *
  * @param store
  * @param reducers
@@ -76,12 +83,26 @@ const overrideCombineReducers = (func) => {
   _combine = func;
 };
 
+function registry(type, action) {
+  if (typeof action == 'object') {
+    _actions_idx[type] = action;
+  }
+  else if (action === false) {
+    delete _actions_idx[type];
+
+    return false;
+  }
+
+  return _actions_idx[type]
+}
+
 export {
   Action,
   Container,
   addReducer,
   connect,
   overrideCombineReducers,
+  registry,
   removeReducer,
   _store
 };

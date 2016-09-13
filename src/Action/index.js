@@ -11,7 +11,7 @@ import {
 /**
  *
  */
-export default class {
+export default class Action {
   /**
    *
    * @param component
@@ -58,6 +58,7 @@ export default class {
       let is_mapped = args[0] != 'payload';
 
       let type = this.generateType(this.object.getName(), this.method);
+
       this.original = func.bind(this.object);
       this.type = type;
       this.arguments = args;

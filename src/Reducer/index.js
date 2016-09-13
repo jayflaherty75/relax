@@ -4,29 +4,42 @@ import { _store } from '../index';
 /**
  *
  */
-export default class {
+export default class Reducer {
   /**
    *
-   * @param component
    */
-  constructor(component) {
-    if (typeof component != 'object') {
-      throw new Error (
-        'Parameter component must be an object'
-      )
-    }
-
-    this.component = component;
+  constructor() {
     this.handlers = {};
   }
 
   /**
    *
+   * @param instance
    * @param action
    * @param handler
    */
-  add(action, handler) {
-    this.handlers[action.type] = this.createMapper(action, handler);
+  addAction(instance, action, handler) {
+    if (typeof this.handlers[action.type] == 'undefined') {
+      this.handlers[action.type] = {};
+    }
+
+    this.handlers[action.type][instance.id] = this.createMapper(instance, action, handler);
+  }
+
+  /**
+   *
+   * @param instance
+   */
+  removeInstance(instance) {
+    for (let type in this.handlers) {
+      if (this.handlers.hasOwnProperty(type)) {
+        let instances = this.handlers[type];
+
+        if (typeof instances[instance.id] != 'undefined') {
+          delete instances[instance.id];
+        }
+      }
+    }
   }
 
   /**
@@ -35,25 +48,33 @@ export default class {
    * @returns {function(this:(*|string))}
    */
   create(initialState) {
-    return ((state = initialState, action) => {
-        const handler = this.handlers[action.type];
+    return (state = initialState, action) => {
+      const handlers = this.handlers[action.type];
 
-        if (typeof handler == 'function') {
-          return handler (state, action);
-        }
+      if (typeof handlers != 'undefined') {
+        return (() => {
+          for (let id in handlers) {
+            if (handlers.hasOwnProperty(id)) {
+              state = handlers[id] (state, action);
+            }
+          }
 
-        return state;
+          return state;
+        })();
       }
-    ).bind(this.component);
+
+      return state;
+    };
   }
 
   /**
    *
-   * @param action
+   * @param instance
+   * @param action_obj
    * @param handler
    * @returns {Function}
    */
-  createMapper(action_obj, handler) {
+  createMapper(instance, action_obj, handler) {
     const arg_list = action_obj.arguments;
 
     return (state, action) => {
@@ -61,7 +82,7 @@ export default class {
 
       apply_args.push (state);
 
-      return handler.apply(this.component, apply_args);
+      return handler.apply(instance, apply_args);
     }
   }
 }

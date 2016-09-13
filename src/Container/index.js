@@ -2,17 +2,8 @@
 import _ from 'lodash';
 
 import React, { Component } from 'react';
-import Action from '../Action/index';
-import Reducer from '../Reducer/index';
-import { register, addReducer } from '../index';
-import { scanMethods } from '../utils/helpers';
-
-/**
- * Global actions registry for referencing actions from other modules
- * @type {{}}
- * @private
- */
-let _actions_idx = {};
+import Action from '../Action';
+import { registry } from '../index';
 
 /**
  *
@@ -25,8 +16,7 @@ export default class Container extends Component {
       throw new Error ('Relax.Container must be connected to Redux store');
     }
 
-    this._actionsIdx = {};
-    this.reducer = new Reducer(this);
+    this.id = _.uniqueId(this.config().name);
   }
 
   /**
@@ -40,49 +30,9 @@ export default class Container extends Component {
     return {
       'name': name,
       'reducer': name.toLowerCase(),
-      'single_instance': true
+      'initial_state': {},
+      'single_instance': true,
     };
-  }
-
-  /**
-   *
-   * @param initialState
-   */
-  initialize(initialState) {
-    const config = this.config();
-    const proto = Object.getPrototypeOf(this);
-    const parent = Container.prototype;
-
-    let methods = {};
-
-    scanMethods(proto, parent).map((method) => {
-      let func = (this)[method];
-      let descriptor = new Action(this, method);
-
-      if (descriptor.isValid()) {
-        methods[method] = descriptor;
-        _actions_idx[descriptor.type] = descriptor;
-
-        this._actionsIdx[descriptor.type] = descriptor;
-        this.reducer.add(descriptor, func);
-
-        (this)[method] = descriptor.dispatcher;
-      }
-      else {
-        (this)[method] = func;
-      }
-    });
-
-    this._methods = methods;
-
-    addReducer(config.reducer, this.reducer.create(initialState));
-  }
-
-  /**
-   *
-   */
-  uninitialize() {
-
   }
 
   /**
@@ -95,29 +45,39 @@ export default class Container extends Component {
 
   /**
    *
-   * @param actionId
-   * @param func
-   */
-  implement (actionType, func) {
-
-  }
-
-  /**
-   *
-   * @param actionId
-   */
-  remove (actionType) {
-
-  }
-
-  /**
-   *
-   * @param name
+   * @param type
    * @returns {boolean}
    */
-  static getAction(name) {
-    return typeof _actions_idx[name] != 'undefined'
-      ? _actions_idx[name]
-      : false;
+  actionValidate(type) {
+    return typeof registry(type) == 'object';
+  };
+
+  /**
+   *
+   * @param type
+   * @returns {*|number|boolean|string}
+   */
+  actionCreator(type) {
+    return registry(type).action;
+  }
+
+  /**
+   *
+   * @param type
+   * @param args
+   * @returns {*|{type, payload}}
+   */
+  actionCreate(type, ...args) {
+    return this.actionCreator(type)(...args);
+  }
+
+  /**
+   *
+   * @param type
+   * @param args
+   * @returns {*}
+   */
+  actionDispatch(type, ...args) {
+    return registry(type).dispatcher(...args);
   }
 }
