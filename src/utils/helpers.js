@@ -9,7 +9,7 @@ import _ from 'lodash';
 export function payloadMapper(argList) {
   let result = {};
 
-  for (let i = 0, l = argList.length - 1; i < l; i++) {
+  for (let i = 0, l = argList.length; i < l; i++) {
     result[argList[i]] = arguments[i + 1];
   }
 
@@ -27,9 +27,7 @@ export function reducerMapper(action, argList) {
   let applyArgs = [];
 
   argList.map ((argName) => {
-    if (typeof payload[argName] != 'undefined') {
-      applyArgs.push (payload[argName]);
-    }
+    applyArgs.push (payload[argName]);
   });
 
   return applyArgs;

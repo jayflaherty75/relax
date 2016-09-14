@@ -47,7 +47,9 @@ function Relax(store, reducers, combineReducers) {
 
   _store = store;
   _reducers = reducers || {};
-  _combine = combineReducers;
+  _combine = combineReducers || _combine;
+
+  return store;
 };
 
 /**
