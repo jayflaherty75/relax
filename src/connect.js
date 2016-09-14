@@ -22,7 +22,8 @@ export default function connect(mapStateToProps, mapDispatchToProps, mergeProps,
 
     initialize(config, cont);
 
-    const newMapStateToProps = (state) => {
+    /*
+    const newMapStateToProps = (state, ownProps) => {
       // Mapping is here in case anything has to be auto-mapped to props.
       // Currently not in use.
       let mapping = {},
@@ -30,7 +31,7 @@ export default function connect(mapStateToProps, mapDispatchToProps, mergeProps,
 
       switch (typeof mapStateToProps) {
         case 'function':
-          custom_map = mapStateToProps(state);
+          custom_map = mapStateToProps(state, ownProps);
           break;
         case 'object':
           custom_map = mapStateToProps;
@@ -41,9 +42,10 @@ export default function connect(mapStateToProps, mapDispatchToProps, mergeProps,
         mapping
       );
     };
+    */
 
     return connectRedux(
-      newMapStateToProps,
+      mapStateToProps,
       mapDispatchToProps,
       mergeProps,
       options

@@ -61,7 +61,7 @@ export default class Action {
 
       this.original = func.bind(this.object);
       this.type = type;
-      this.arguments = args;
+      this.arguments = args.slice(0, args.length - 1);
 
       this.setActionCreator(is_mapped ? payloadMapper : payloadIdentity)
       this.setReducerMapping(is_mapped ? reducerMapper : reducerIdentity);
