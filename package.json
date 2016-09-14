@@ -1,11 +1,11 @@
 {
   "name": "relax",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Simple and familiar yet scalable organization of your React/Redux applications.",
   "main": "lib/index.js",
   "scripts": {
-    "build": "babel src --presets babel-preset-latest --out-dir lib && xcopy lib\\*.* examples\\todos\\node_modules\\relax\\lib /s /e /h /y",
-    "deploy": "xcopy lib\\*.* ..\\score-and-report\\node_modules\\relax\\lib /s /e /h /y"
+    "build": "babel src --presets babel-preset-latest --out-dir lib",
+    "prepublish": "npm run build"
   },
   "repository": {
     "type": "git",
@@ -17,9 +17,7 @@
     "relax",
     "state"
   ],
-  "authors": [
-    "Jason K. Flaherty <coderx75@hotmail.com>"
-  ],
+  "author": "Jason K. Flaherty <jasonkflaherty@outlook.com> (http://www.jasonkflaherty.com)",
   "license": "MIT",
   "devDependencies": {
     "babel": "^6.5.2",
