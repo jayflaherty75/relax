@@ -1,5 +1,5 @@
 import React from 'react';
-import { Container, connect, registry } from 'relax';
+import { Container, connect, dispatch } from 'react-redux-relax';
 import Link from '../components/Link'
 
 class FilterLink extends Container {
@@ -33,7 +33,7 @@ const mapStateToProps = (state, ownProps) => {
   return {
     active: ownProps.filter === state.visibilityFilter,
     onClick: () => {
-      registry('FilterLink/SET_FILTER').dispatcher(ownProps.filter);
+      dispatch('FilterLink/SET_FILTER', ownProps.filter);
     }
   }
 };

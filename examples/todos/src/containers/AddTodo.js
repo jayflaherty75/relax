@@ -1,5 +1,5 @@
 import React from 'react';
-import { Container, connect } from 'relax';
+import { Container, connect } from 'react-redux-relax';
 
 class AddTodo extends Container {
   constructor (props, content) {
@@ -52,6 +52,7 @@ class AddTodo extends Container {
           if (!input.value.trim()) {
             return
           }
+          // Calls the action dispatcher, not the original reducer method
           this.addTodo(input.value);
           input.value = ''
         }}>
