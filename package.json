@@ -1,5 +1,5 @@
 {
-  "name": "relax",
+  "name": "react-redux-relax",
   "version": "0.1.0",
   "description": "Simple and familiar yet scalable organization of your React/Redux applications.",
   "main": "lib/index.js",

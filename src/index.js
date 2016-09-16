@@ -113,7 +113,20 @@ function registry(type, action) {
     return false;
   }
 
-  return _actions_idx[type]
+  return typeof _actions_idx[type] != 'undefined' ? _actions_idx[type] : false;
+}
+
+/**
+ * Dispatcher for calling any registered action.  Can be called for actions
+ * that have not been registered yet (will return undefined).
+ * @param type
+ * @param args
+ * @returns {*|undefined}
+ */
+function dispatch(type, ...args) {
+  const action = registry(type);
+
+  return action !== false ? action.dispatcher(...args) : undefined;
 }
 
 export {
@@ -121,6 +134,7 @@ export {
   Container,
   addReducer,
   connect,
+  dispatch,
   registry,
   removeReducer,
   _store
