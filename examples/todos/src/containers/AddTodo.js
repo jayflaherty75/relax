@@ -5,7 +5,9 @@ class AddTodo extends Container {
   constructor (props, content) {
     super (props, content);
 
-    this.nextTodoId = 0;
+    this.state = {
+      nextTodoId: 0
+    };
 
     this.initialize();
   }
@@ -19,10 +21,14 @@ class AddTodo extends Container {
   }
 
   addTodo(text, __state) {
+    this.setState({
+      'nextTodoId': this.state.nextTodoId + 1
+    });
+
     return [
       ...__state,
       {
-        'id': this.nextTodoId++,
+        'id': this.state.nextTodoId,
         'text': text,
         'completed': false
       }
@@ -52,8 +58,10 @@ class AddTodo extends Container {
           if (!input.value.trim()) {
             return
           }
+
           // Calls the action dispatcher, not the original reducer method
           this.addTodo(input.value);
+
           input.value = ''
         }}>
           <input ref={node => {
