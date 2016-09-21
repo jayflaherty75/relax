@@ -2,6 +2,9 @@ import React from 'react';
 import { Container, connect, dispatch } from 'react-redux-relax';
 import Link from '../components/Link'
 
+/**
+ * Simple Container example.
+ */
 class FilterLink extends Container {
   constructor (props, content) {
     super (props, content);
@@ -16,6 +19,12 @@ class FilterLink extends Container {
     }
   }
 
+  /**
+   * Reducer passes new filter value to replace state.
+   * @param filter
+   * @param __state
+   * @returns {*}
+   */
   setFilter(filter, __state) {
     return filter;
   }
@@ -33,6 +42,8 @@ const mapStateToProps = (state, ownProps) => {
   return {
     active: ownProps.filter === state.visibilityFilter,
     onClick: () => {
+      // Action may be dispatched directly from mapStateToProps or anywhere
+      // for that matter.
       dispatch('FilterLink/SET_FILTER', ownProps.filter);
     }
   }
