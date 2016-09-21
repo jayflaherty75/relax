@@ -1,5 +1,5 @@
 
-import { _store } from '../index';
+import { _store, registry } from '../index';
 
 /**
  * Representation of a Redux reducer handling multiple actions for a given
@@ -24,6 +24,10 @@ export default class Reducer {
    * @param handler
    */
   addAction(instance, action, handler) {
+    if (typeof action == 'string') {
+      action = registry(action);
+    }
+
     if (typeof this.handlers[action.type] == 'undefined') {
       this.handlers[action.type] = {};
     }
