@@ -1,6 +1,6 @@
 {
   "name": "react-redux-relax",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "React-Redux development simplified.",
   "main": "lib/index.js",
   "scripts": {

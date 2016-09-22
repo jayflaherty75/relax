@@ -112,6 +112,14 @@ function initialize(config, cont) {
     return Object.keys(actions);
   };
 
+  proto.getReducer = function getReducer() {
+    return reducer;
+  };
+
+  proto.on = function(type, handler) {
+    reducer.addAction(this, type, handler);
+  };
+
   proto.initialize = function initialize() {
     this.getActions().map((type) => {
       let action = registry(type);
