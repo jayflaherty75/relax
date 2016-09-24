@@ -45,15 +45,11 @@ class AddTodo extends Container {
    * @param __state
    * @returns {*[]}
    */
-  addTodo(text, __state) {
-    this.setState({
-      'nextTodoId': this.state.nextTodoId + 1
-    });
-
+  addTodo(id, text, __state) {
     return [
       ...__state,
       {
-        'id': this.state.nextTodoId,
+        'id': id,
         'text': text,
         'completed': false
       }
@@ -108,7 +104,7 @@ class AddTodo extends Container {
           }
 
           // Calls the action dispatcher, not the original reducer method
-          this.addTodo(input.value);
+          this.addTodo(++this.state.nextTodoId, input.value);
 
           input.value = ''
         }}>
